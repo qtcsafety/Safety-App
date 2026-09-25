@@ -1,13 +1,30 @@
-<!DOCTYPE html> 
-<html lang="th"> 
-<head> 
-<base target="_top"> 
-<meta charset="UTF-8"> 
-<meta http-equiv="X-UA-Compatible" content="IE=edge"> 
-<meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-<title> Safety APP </title> 
-</head> 
-<body> 
-<iframe style="width: 100%; height: 100vh;" scrolling="yes" src="https://script.google.com/macros/s/AKfycbxF9SrY6V2wFMfULs0Myc9-7AYV5ywXR1XP130bCPEFJBjYxTlytQRRJE9h0nGDGjUN_A/exec" frameborder="0"></iframe> 
-</body> 
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safety APP</title>
+<script>
+  // ⚠️ ส่วนที่เพิ่มเข้ามาใหม่:
+  // ถ้า URL ตอนเข้ามามี ?id=...&redirect=1 (แปลว่ามาจากการสแกน QR Code)
+  // ให้เปลี่ยนหน้าทั้งหน้า (ไม่ใช่แค่ src ของ iframe) ไปยัง Apps Script /exec
+  // ตัวจริงพร้อมพ่วง query เดิมไปด้วยทันที ก่อนที่ iframe ด้านล่างจะโหลด
+  // เพราะ logic การ redirect ไปยังลิงก์ปลายทาง (คอลัมน์ D) อยู่ใน doGet()
+  // ฝั่ง Apps Script เท่านั้น ถ้าไม่ส่ง query ไปด้วย มันจะไม่รู้ว่าต้อง redirect
+  (function () {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('redirect') === '1' && params.get('id')) {
+      // 🔧 ต้องเป็น URL เดียวกับที่ตั้งไว้ใน CONFIG.WEB_APP_URL ฝั่ง Code.gs ไม่ใช่... 
+      // จริงๆ แล้วต้องเป็นลิงก์ /exec ของ Apps Script เสมอ (ตัวที่ iframe ด้านล่างใช้อยู่)
+      var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxF9SrY6V2wFMfULs0Myc9-7AYV5ywXR1XP130bCPEFJBjYxTlytQRRJE9h0nGDGjUN_A/exec';
+      window.location.replace(EXEC_URL + window.location.search);
+    }
+  })();
+</script>
+</head>
+<body>
+<iframe style="width: 100%; height: 100vh;" scrolling="yes" src="https://script.google.com/macros/s/AKfycbxF9SrY6V2wFMfULs0Myc9-7AYV5ywXR1XP130bCPEFJBjYxTlytQRRJE9h0nGDGjUN_A/exec" frameborder="0"></iframe>
+</body>
 </html>
