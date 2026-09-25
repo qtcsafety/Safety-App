@@ -8,59 +8,43 @@
 <title>Safety APP</title>
 </head>
 <body style="margin:0;">
-  <!-- iframe ประกาศไว้ในหน้า HTML ตรงๆ เหมือนไฟล์เดิม (ไม่พึ่ง JS ในการสร้าง)
-       เพื่อให้หน้าแรกโหลดได้แน่นอนแม้ JS ด้านล่างมีปัญหา -->
-  <iframe id="mainFrame" style="width:100%;height:100vh;border:0;" scrolling="yes"
-    frameborder="0"
-    src="https://script.google.com/macros/s/AKfycbxF9SrY6V2wFMfULs0Myc9-7AYV5ywXR1XP130bCPEFJBjYxTlytQRRJE9h0nGDGjUN_A/exec">
-  </iframe>
-
+<div id="app-frame-wrap" style="width:100%;height:100vh;"></div>
 <script>
-  // 🔧 ต้องเป็นลิงก์ /exec ของ Apps Script ตัวจริงเสมอ (ค่าเดียวกับ CONFIG.WEB_APP_URL ใน Code.gs)
+  // 🔧 ต้องเป็นลิงก์ /exec ของ Apps Script ตัวจริงเสมอ
   var EXEC_URL = 'https://script.google.com/macros/s/AKfycbxF9SrY6V2wFMfULs0Myc9-7AYV5ywXR1XP130bCPEFJBjYxTlytQRRJE9h0nGDGjUN_A/exec';
 
   var params = new URLSearchParams(window.location.search);
   var id = params.get('id');
+  var wrap = document.getElementById('app-frame-wrap');
 
   if (params.get('redirect') === '1' && id) {
-    // ===== มาจากการสแกน QR Code: แทนที่ iframe ด้วยข้อความ "กำลังเปิดแอพ..." =====
-    // แล้วขอลิงก์ปลายทางจาก Apps Script แบบ JSON เพื่อ redirect เองตรงนี้
-    // (ทำที่หน้า GitHub Pages ล้วนๆ ไม่ผ่าน iframe ของ Google
-    // เพื่อเลี่ยงปัญหา sandbox ที่เปลี่ยนเนื้อหาได้แต่เปลี่ยน URL ในแถบที่อยู่ไม่ได้)
-    document.body.innerHTML =
-      '<p id="statusMsg" style="font-family:sans-serif;text-align:center;padding-top:40px;">กำลังเปิดแอพ...</p>';
-
-    var done = false;
-    // กันค้าง: ถ้าผ่านไป 6 วินาทีแล้วยังไม่ได้คำตอบ ให้โชว์ลิงก์ให้กดเอง
-    var timeoutId = setTimeout(function () {
-      if (done) return;
-      done = true;
-      document.getElementById('statusMsg').innerHTML =
-        'เปิดช้ากว่าปกติ <a href="' + EXEC_URL + '?id=' + encodeURIComponent(id) + '&redirect=1" target="_top">กดที่นี่เพื่อลองใหม่</a>';
-    }, 6000);
+    // ===== มาจากการสแกน QR Code =====
+    wrap.innerHTML = '<p style="font-family:sans-serif;text-align:center;padding-top:40px;">กำลังเปิดแอพ...</p>';
 
     fetch(EXEC_URL + '?id=' + encodeURIComponent(id) + '&redirect=1&format=json')
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (done) return;
-        done = true;
-        clearTimeout(timeoutId);
         if (data && data.link) {
           window.location.replace(data.link);
         } else {
-          document.getElementById('statusMsg').outerHTML =
-            '<h2 style="font-family:sans-serif;text-align:center;padding-top:40px;">❌ ไม่พบแอพนี้ หรือถูกลบไปแล้ว</h2>';
+          wrap.innerHTML = '<h2 style="font-family:sans-serif;text-align:center;padding-top:40px;">❌ ไม่พบแอพนี้ หรือถูกลบไปแล้ว</h2>';
         }
       })
       .catch(function () {
-        if (done) return;
-        done = true;
-        clearTimeout(timeoutId);
-        // fetch ใช้ไม่ได้ (เช่นถูกบล็อก) -> fallback กลับไปวิธีเดิมผ่านหน้า Apps Script
+        // fetch ใช้ไม่ได้ -> fallback กลับไปวิธีเดิมผ่านหน้า Apps Script
         window.location.replace(EXEC_URL + window.location.search);
       });
+  } else {
+    // ===== เข้าหน้าแรกปกติ: แสดง dashboard ทั้งหมดผ่าน iframe =====
+    var iframe = document.createElement('iframe');
+    iframe.style.width = '100%';
+    iframe.style.height = '100vh';
+    iframe.style.border = '0';
+    iframe.setAttribute('scrolling', 'yes');
+    iframe.setAttribute('frameborder', '0');
+    iframe.src = EXEC_URL;
+    wrap.appendChild(iframe);
   }
-  // ถ้าไม่มี redirect=1 ก็ไม่ต้องทำอะไรเพิ่ม ปล่อยให้ iframe ด้านบนแสดง dashboard ตามปกติ
 </script>
 </body>
 </html>
